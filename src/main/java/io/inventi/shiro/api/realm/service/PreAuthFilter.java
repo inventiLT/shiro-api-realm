@@ -14,7 +14,12 @@ import javax.servlet.http.HttpServletRequest;
 public class PreAuthFilter extends AuthenticatingFilter {
 
     public static final String USERNAME_HEADER = "x-credential-username";
-    private static final String NO_AUTH_USERNAME = "no-auth";
+    
+    private LdapService ldapService;
+
+    public PreAuthFilter(LdapService ldapService) {
+        this.ldapService = ldapService;
+    }
 
     private String getUsernameHeader(ServletRequest request) {
         HttpServletRequest httpRequest = WebUtils.toHttp(request);
@@ -22,7 +27,7 @@ public class PreAuthFilter extends AuthenticatingFilter {
     }
 
     @Override
-    protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {//false by default or we wouldn't be in this method
+    protected boolean onAccessDenied(ServletRequest request, ServletResponse response) throws Exception {
         return executeLogin(request, response);
     }
 
@@ -32,7 +37,7 @@ public class PreAuthFilter extends AuthenticatingFilter {
         if (isPreAuthRequest(request)) {
             token = createToken(request, response);
         } else {
-            token = new UserToken(NO_AUTH_USERNAME, false);
+            token = new UserToken("", false);
         }
         try {
             Subject subject = getSubject(request, response);
@@ -46,7 +51,7 @@ public class PreAuthFilter extends AuthenticatingFilter {
     @Override
     protected AuthenticationToken createToken(ServletRequest request, ServletResponse response) throws Exception {
         String userId = getUsernameHeader(request);
-        return new UserToken(userId, true);
+        return new UserToken(ldapService.resolveUsername(userId), true);
     }
 
     @Override

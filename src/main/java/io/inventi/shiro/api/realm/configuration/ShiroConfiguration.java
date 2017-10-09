@@ -3,6 +3,7 @@ package io.inventi.shiro.api.realm.configuration;
 import io.inventi.shiro.api.realm.domain.UserToken;
 import io.inventi.shiro.api.realm.service.AuthorizationExceptionHandler;
 import io.inventi.shiro.api.realm.service.ApiRealm;
+import io.inventi.shiro.api.realm.service.LdapService;
 import io.inventi.shiro.api.realm.service.PreAuthFilter;
 import io.inventi.shiro.api.realm.service.UserService;
 import io.inventi.shiro.api.realm.service.UserServiceImpl;
@@ -25,7 +26,10 @@ import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 public class ShiroConfiguration {
 
     @Value("${users.endpoint}")
-    public String rootEndpoint;
+    public String usersEndpoint;
+
+    @Value("${ldap.endpoint}")
+    public String ldapEndpoint;
 
     @Bean
     public static PropertySourcesPlaceholderConfigurer propertyPlaceholderConfigurer() {
@@ -34,7 +38,12 @@ public class ShiroConfiguration {
 
     @Bean
     public UserService userService() {
-        return new UserServiceImpl(rootEndpoint, new RestTemplateBuilder());
+        return new UserServiceImpl(usersEndpoint, new RestTemplateBuilder());
+    }
+
+    @Bean
+    public LdapService ldapService() {
+        return new LdapService(ldapEndpoint, new RestTemplateBuilder());
     }
 
     @Bean
@@ -50,7 +59,7 @@ public class ShiroConfiguration {
     public ShiroFilterFactoryBean shiroFilterFactoryBean() {
         ShiroFilterFactoryBean shiroFilterFactory = new ShiroFilterFactoryBean();
         shiroFilterFactory.setSecurityManager(securityManager());
-        shiroFilterFactory.getFilters().put("preAuthFilter", new PreAuthFilter());
+        shiroFilterFactory.getFilters().put("preAuthFilter", new PreAuthFilter(ldapService()));
         shiroFilterFactory.getFilterChainDefinitionMap().put("/**", "preAuthFilter[permissive]");
         return shiroFilterFactory;
     }

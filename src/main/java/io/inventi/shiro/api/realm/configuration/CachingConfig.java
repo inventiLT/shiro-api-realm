@@ -32,6 +32,7 @@ public class CachingConfig {
         EhcacheCachingProvider provider = (EhcacheCachingProvider) Caching.getCachingProvider();
         DefaultConfiguration configuration = new DefaultConfiguration(provider.getDefaultClassLoader());
         configuration.addCacheConfiguration("userCache", cacheConfiguration);
+        configuration.addCacheConfiguration("ldapCache", cacheConfiguration);
         return new JCacheCacheManager(provider.getCacheManager(provider.getDefaultURI(), configuration));
     }
 
